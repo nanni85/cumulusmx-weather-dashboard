@@ -383,7 +383,7 @@ function jsArr(array $data): string {
   <?php endif; ?>
 
   <footer>
-    <span>© <?= date('Y') ?> <?= htmlspecialchars($config['station_name']) ?> · <?= htmlspecialchars($config['station_city']) ?></span>
+    <span>© <?= date('Y') ?> <?= htmlspecialchars($config['station_name']) ?> · <?= htmlspecialchars($config['station_city']) ?> · <?= htmlspecialchars($config['version'] ?? 'v1.0.0') ?></span>
     <span><a href="index.php">🌡 Meteo Live</a></span>
   </footer>
 

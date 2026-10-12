@@ -464,10 +464,9 @@ else               $rain_rate_color = '#f87171';
     <?php endif; ?>
 
     <footer>
-        <span>© <?= date('Y') ?> <?= htmlspecialchars($config['station_name']) ?> · Powered by CumulusMX</span>
+        <span>© <?= date('Y') ?> <?= htmlspecialchars($config['station_name']) ?> · Powered by CumulusMX · <?= htmlspecialchars($config['version'] ?? 'v1.0.0') ?></span>
         <span>Dati aggiornati: <?= htmlspecialchars($date) ?> <?= htmlspecialchars($time) ?></span>
     </footer>
-
 </main>
 
 <script>

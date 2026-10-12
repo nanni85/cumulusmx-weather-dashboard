@@ -2,6 +2,8 @@
 // config.example.php -> Rinomina questo file in config.php e personalizza i campi
 
 return [
+    // Versione del template
+    'version'        => 'v1.0.0',
     // Informazioni generali Stazione Meteo
     'station_name'   => 'Stazione Meteo Demo',
     'station_city'   => 'Città, Regione',
