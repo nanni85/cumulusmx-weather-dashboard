@@ -26,7 +26,7 @@ Zero external databases required — fully powered by standard CumulusMX text an
 
 ```text
 ├── config.example.php      # Sample configuration file
-├── config.php              # Your active station configuration (git-ignored)
+├── config.php              # Your active station configuration
 ├── index.php               # Realtime live dashboard
 ├── storico.php             # Historical climate archive
 ├── .gitignore              # Ignores local data, cache, and sensitive files
