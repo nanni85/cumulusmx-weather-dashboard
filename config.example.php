@@ -8,10 +8,10 @@ return [
     'station_name'   => 'Stazione Meteo Demo',
     'station_city'   => 'Città, Regione',
     'station_alt'    => 250, // Quota altimetrica in metri s.l.m.
-    'site_url'       => 'https://demo.nickk.biz',
+    'site_url'       => 'https://demo.meteo.station',
     
     // Coordinate geografiche (per centrare il Radar Windy)
-    'lat'            => 43.44,
+    'lat'            => 43.48,
     'lon'            => 11.85,
 
     // Percorsi file locali CumulusMX
