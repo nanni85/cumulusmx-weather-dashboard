@@ -15,8 +15,8 @@ return [
     'site_url'       => 'https://example-weather.com',
     
     // GPS coordinates (used to center the embedded Windy Radar)
-    'lat'            => 43.44,
-    'lon'            => 11.85,
+    'lat'            => 41.44,
+    'lon'            => 10.85,
 
     // File paths to CumulusMX output data
     'realtime_path'  => __DIR__ . '/realtime.txt',
@@ -36,7 +36,7 @@ return [
         'webcam' => [
             'enabled'     => true,
             'name'        => 'Panoramic Webcam',
-            'url'         => 'webcam.jpg', // e.g. 'webcam.jpg', 'images/webcam.jpg', or 'https://...'
+            'url'         => 'webcam/webcam.jpg', // e.g. 'webcam.jpg', 'images/webcam.jpg', or 'https://...'
             'thumb_url'   => '',           // Optional thumbnail URL (leave empty '' to use 'url' directly)
             'gallery_url' => '',           // Optional gallery link (e.g. 'gallery/') or leave empty ''
         ],
