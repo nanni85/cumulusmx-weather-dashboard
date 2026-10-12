@@ -1,32 +1,40 @@
-# ⛅ CumulusMX Modern Weather Dashboard
+# ⛅ CumulusMX Modern Responsive Weather Dashboard
 
-Una dashboard web moderna, reattiva e modulare per stazioni meteo basate su **CumulusMX**.  
-Progettata per essere leggera, rapida e facile da configurare tramite un unico file di impostazioni, senza richiedere database esterni.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![PHP Version](https://img.shields.io/badge/PHP-7.4%2B-777bb4.svg)](https://www.php.net/)
 
----
+A lightweight, modern, and mobile-ready web dashboard template designed for weather stations running **CumulusMX**.  
+Zero external databases required — fully powered by standard CumulusMX text and JSON logs.
 
-## ✨ Caratteristiche
-
-* **Dati in tempo reale**: lettura diretta dal file `realtime.txt` (temperatura, umidità, punto di rugiada, wet-bulb, pressione, intensità pioggia, vento).
-* **Rosa dei venti reattiva**: indicatore vettoriale SVG animato con calcolo del punto cardinale e della raffica.
-* **Radar precipitazioni Windy**: integrato e centrato automaticamente sulle coordinate GPS della stazione.
-* **Archivio storico (`storico.php`)**: navigazione mese per mese e anno per anno con grafici interattivi (Chart.js) basati sui log JSON generati da CumulusMX.
-* **Supporto Webcam universale**: compatibile direttamente con immagini statiche `webcam.jpg` (locali o remote), thumbnail opzionali e visualizzazione ingrandita Lightbox con auto-refresh.
-* **Design Responsive & Dark/Light Mode**: interfaccia ad alte prestazioni ottimizzata per smartphone e desktop con salvataggio automatico del tema.
+[🇮🇹 Leggi la documentazione in Italiano](README.it.md)
 
 ---
 
-## 📁 Struttura della Cartella
+## ✨ Features
+
+- **Realtime Weather Data**: Direct parsing of `realtime.txt` (temperature, humidity, dew point, wet-bulb, pressure, rain rate, wind speed/gust).
+- **Responsive Compass & Wind Rose**: Animated SVG compass dial with dynamic bearing needle and cardinal direction detection.
+- **Embedded Windy Radar**: Automatically centered on your station's GPS coordinates.
+- **Historical Data & Interactive Charts (`storico.php`)**: Full archive with monthly and yearly trends powered by Chart.js.
+- **Single Webcam Support**: Direct static `.jpg` support (local or remote URL), optional lightweight thumbnail, and full-resolution lightbox viewer with auto-refresh.
+- **Dark / Light Mode**: Smooth theme toggling with persistent user preference via `localStorage`.
+- **Modular & Clean Architecture**: Enable or disable modules via a single `config.php` file.
+
+---
+
+## 📁 Repository Structure
 
 ```text
-├── config.example.php      # File di configurazione di esempio
-├── config.php              # Configurazione attiva 
-├── index.php               # Dashboard principale in tempo reale
-├── storico.php             # Archivio climatico mensile e annuale
-├── .gitignore              # Esclude dati personali e file di cache
-├── README.md               # Istruzioni d'uso
+├── config.example.php      # Sample configuration file
+├── config.php              # Your active station configuration (git-ignored)
+├── index.php               # Realtime live dashboard
+├── storico.php             # Historical climate archive
+├── .gitignore              # Ignores local data, cache, and sensitive files
+├── README.md               # English documentation
+├── README.it.md            # Italian documentation
 │
 ├── includes/
-│   └── functions.php       # Funzioni di parsing e calcoli meteorologici
+│   ├── functions.php       # Parsing algorithms and meteorological formulas
+│   └── lang.php            # Localization strings (EN / IT)
 │
-└── ico/                    # Icone e favicon del sito
+└── ico/                    # Station favicons and web manifest
