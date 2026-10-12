@@ -7,6 +7,9 @@ if (!file_exists($configFile)) {
 }
 $config = require $configFile;
 require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/includes/lang.php';
+
+$L = loadTranslations($config['lang'] ?? 'it');
 
 // Flag moduli
 $modWindy  = !empty($config['modules']['windy_radar']['enabled']);
@@ -55,7 +58,7 @@ $wind_gust_10m = rt($p, 40);
 $apparent_temp = rt($p, 54);
 
 $wetbulb       = calculateWetBulb($temp !== null ? (float)$temp : null, $hum !== null ? (float)$hum : null);
-$wind_dir_name = $wind_bear !== null ? bearingToName((int)$wind_bear) : '--';
+$wind_dir_name = $wind_bear !== null ? ($L['wind_cardinals'][round((int)$wind_bear / 22.5) % 16] ?? '--') : '--';
 $tempCol       = tempColor($temp !== null ? (float)$temp : null);
 
 // Dati Storici da JSON
@@ -64,7 +67,7 @@ $currMonth    = (int)date('n');
 $prevM        = $currMonth > 1 ? $currMonth - 1 : 12;
 $prevY        = $currMonth > 1 ? $currYear : $currYear - 1;
 $prevFullYear = $currYear - 1;
-$monthNames   = ['','Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+$monthNames   = $L['months_short'];
 
 $thisMaxTemp = $thisMinTemp = $thisAvgTemp = $thisRain = $thisGust = $thisWind = '[]';
 $prevMaxTemp = $prevMinTemp = $prevAvgTemp = $prevRain = $prevGust = $prevWind = '[]';
@@ -88,7 +91,7 @@ if ($modCharts) {
 
     if ($rain_today !== null && (float)$rain_today > 0) {
         $lastRainDate  = date('d/m/Y');
-        $lastRainLabel = 'Oggi';
+        $lastRainLabel = $L['today'];
     } elseif (!empty($rainDay)) {
         foreach (array_reverse($rainDay) as [$ts, $v]) {
             if ($v > 0) {
@@ -141,12 +144,11 @@ elseif ($rr <= 10) $rain_rate_color = '#f97316';
 else               $rain_rate_color = '#f87171';
 ?>
 <!DOCTYPE html>
-<html lang="it" data-theme="light">
+<html lang="<?= htmlspecialchars($config['lang'] ?? 'it') ?>" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <title><?= htmlspecialchars($config['station_name']) ?> – <?= htmlspecialchars($config['station_city']) ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Stazione meteo di <?= htmlspecialchars($config['station_name']) ?>. Dati in tempo reale: temperatura, pioggia, vento, pressione.">
     <link rel="icon" type="image/svg+xml" href="ico/favicon.svg">
     <meta name="theme-color" content="#0ea5e9">
     
@@ -225,7 +227,6 @@ else               $rain_rate_color = '#f87171';
         @media(max-width:768px){ .charts-grid { grid-template-columns: 1fr; } }
         .chart-wrap { position: relative; height: 200px; }
         
-        /* Layout Webcam Singola */
         .webcam-card-single { max-width: 860px; margin: 0 auto 1.5rem; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--card-shadow); }
         .webcam-frame-wrap { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; cursor: pointer; }
         .webcam-frame-wrap img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
@@ -255,35 +256,35 @@ else               $rain_rate_color = '#f87171';
         </div>
         <div class="header-right">
             <div class="live-dot<?= $data_age_seconds > 900 ? ' offline' : ($data_age_seconds > 300 ? ' stale' : '') ?>" id="liveDot">
-                <?= $data_age_seconds > 900 ? 'OFFLINE' : ($data_age_seconds > 300 ? 'RITARDO' : 'LIVE') ?>
+                <?= $data_age_seconds > 900 ? $L['offline'] : ($data_age_seconds > 300 ? $L['delay'] : $L['live']) ?>
             </div>
             <button class="btn-theme" id="themeToggle">☀ Light</button>
         </div>
     </header>
 
     <div class="ts-bar">
-        Aggiornamento: <?= htmlspecialchars($date) ?> alle <?= htmlspecialchars($time) ?>
+        <?= $L['last_update'] ?>: <?= htmlspecialchars($date) ?> - <?= htmlspecialchars($time) ?> · <?= $L['auto_refresh'] ?>
     </div>
 
     <!-- HERO GRID -->
     <div class="hero-grid <?= !$modWindy ? 'no-radar' : '' ?>">
         <div class="card-temp" style="--temp-color:<?= $tempCol ?>;">
-            <div class="card-label">Temperatura</div>
+            <div class="card-label"><?= $L['temperature'] ?></div>
             <div class="temp-big"><?= $temp !== null ? number_format((float)$temp,1) : '--' ?><span style="font-size:1.8rem">°C</span></div>
             <div class="temp-minmax">
                 <div><span>▲ Max </span><b><?= $temp_max ?? '--' ?>°</b><span> <?= $temp_max_t ?? '' ?></span></div>
                 <div><span>▼ Min </span><b><?= $temp_min ?? '--' ?>°</b><span> <?= $temp_min_t ?? '' ?></span></div>
             </div>
             <div class="card-sub" style="margin-top:0.5rem">
-                Percepita: <b><?= $apparent_temp ?? '--' ?>°C</b>
-                <?php if ($wetbulb !== null): ?>&nbsp;·&nbsp; Wet Bulb: <b><?= $wetbulb ?>°C</b><?php endif; ?>
+                <?= $L['apparent'] ?>: <b><?= $apparent_temp ?? '--' ?>°C</b>
+                <?php if ($wetbulb !== null): ?>&nbsp;·&nbsp; <?= $L['wet_bulb'] ?>: <b><?= $wetbulb ?>°C</b><?php endif; ?>
             </div>
         </div>
 
         <div class="card">
-            <div class="card-label">Umidità relativa</div>
+            <div class="card-label"><?= $L['humidity'] ?></div>
             <div class="card-value" style="color:var(--accent)"><?= $hum ?? '--' ?><span class="card-unit">%</span></div>
-            <div class="card-sub mt-xs">Punto di rugiada: <b><?= $dew ?? '--' ?>°C</b></div>
+            <div class="card-sub mt-xs"><?= $L['dew_point'] ?>: <b><?= $dew ?? '--' ?>°C</b></div>
             <?php if ($hum !== null): ?>
             <div style="margin-top:0.7rem; height:6px; background:var(--bg3); border-radius:3px; overflow:hidden;">
                 <div style="width:<?= min(100,(float)$hum) ?>%; height:100%; background:linear-gradient(to right,var(--accent),var(--accent2)); border-radius:3px;"></div>
@@ -304,7 +305,7 @@ else               $rain_rate_color = '#f87171';
                     allowfullscreen>
                 </iframe>
             </div>
-            <div class="webcam-label">🌧 Radar precipitazioni – Windy</div>
+            <div class="webcam-label"><?= $L['radar_title'] ?></div>
         </div>
         <?php endif; ?>
     </div>
@@ -312,7 +313,7 @@ else               $rain_rate_color = '#f87171';
     <!-- MAIN METEO GRID -->
     <div class="main-grid">
         <div class="card wind-card">
-            <div class="card-label">Vento</div>
+            <div class="card-label"><?= $L['wind'] ?></div>
             <div class="compass">
                 <div class="compass-labels"><span class="compass-n">N</span><span class="compass-s">S</span><span class="compass-e">E</span><span class="compass-w">O</span></div>
                 <svg class="compass-dial" viewBox="0 0 100 100">
@@ -326,78 +327,81 @@ else               $rain_rate_color = '#f87171';
             </div>
             <div style="font-size:0.8rem; color:var(--muted);"><?= htmlspecialchars($wind_dir_name) ?> (<?= $wind_bear ?? '--' ?>°)</div>
             <div class="flex-between mt-sm" style="width:100%">
-                <div><div class="card-label">Velocità</div><div style="font-size:1.4rem;font-weight:700;color:var(--accent)"><?= $wind_latest ?? '--' ?><span class="card-unit">km/h</span></div></div>
-                <div style="text-align:center"><div class="card-label">Media</div><div style="font-size:1.4rem;font-weight:700"><?= $wind_avg ?? '--' ?><span class="card-unit">km/h</span></div></div>
-                <div style="text-align:right"><div class="card-label">Raffica 10'</div><div style="font-size:1.4rem;font-weight:700;color:var(--warn)"><?= $wind_gust_10m ?? '--' ?><span class="card-unit">km/h</span></div></div>
+                <div><div class="card-label"><?= $L['wind_speed'] ?></div><div style="font-size:1.4rem;font-weight:700;color:var(--accent)"><?= $wind_latest ?? '--' ?><span class="card-unit">km/h</span></div></div>
+                <div style="text-align:center"><div class="card-label"><?= $L['wind_avg'] ?></div><div style="font-size:1.4rem;font-weight:700"><?= $wind_avg ?? '--' ?><span class="card-unit">km/h</span></div></div>
+                <div style="text-align:right"><div class="card-label"><?= $L['wind_gust_10m'] ?></div><div style="font-size:1.4rem;font-weight:700;color:var(--warn)"><?= $wind_gust_10m ?? '--' ?><span class="card-unit">km/h</span></div></div>
             </div>
-            <div class="card-sub">Raffica max: <b><?= $gust_max ?? '--' ?> km/h</b> alle <?= $gust_max_t ?? '--' ?></div>
+            <div class="card-sub"><?= $L['wind_gust_max'] ?>: <b><?= $gust_max ?? '--' ?> km/h</b> <?= $gust_max_t ? '- ' . $gust_max_t : '' ?></div>
         </div>
 
         <div class="card">
-            <div class="card-label">Pressione barometrica</div>
+            <div class="card-label"><?= $L['pressure'] ?></div>
             <div class="card-value"><?= $baro ?? '--' ?><span class="card-unit">hPa</span></div>
-            <div class="mt-sm baro-tend"><?= pressTendIcon($press_tend) ?> <?= pressTendLabel($press_tend) ?></div>
+            <div class="mt-sm baro-tend">
+                <?= pressTendIcon($press_tend) ?> 
+                <?= $press_tend !== null ? ((float)$press_tend > 0.5 ? $L['trend_up'] : ((float)$press_tend < -0.5 ? $L['trend_down'] : $L['trend_steady'])) : '--' ?>
+            </div>
             <div class="card-sub mt-xs">▲ <?= $press_max ?? '--' ?> hPa · ▼ <?= $press_min ?? '--' ?> hPa</div>
-            <div class="card-sub">Tendenza: <?= $press_tend ?? '--' ?> hPa/h</div>
+            <div class="card-sub"><?= $L['trend'] ?>: <?= $press_tend ?? '--' ?> hPa/h</div>
         </div>
 
         <div class="card">
-            <div class="card-label">Precipitazioni</div>
+            <div class="card-label"><?= $L['precipitation'] ?></div>
             <div class="card-value" style="color:var(--accent2)"><?= $rain_today ?? '--' ?><span class="card-unit">mm</span></div>
             <div class="rain-bars mt-sm">
                 <div class="rain-row">
-                    <span style="color:var(--muted);min-width:3.5rem">Oggi</span>
+                    <span style="color:var(--muted);min-width:3.5rem"><?= $L['rain_today'] ?></span>
                     <div class="rain-bar-bg"><div class="rain-bar-fill" style="width:<?= min(100, (float)($rain_today ?? 0) * 5) ?>%"></div></div>
                     <span class="rain-val"><?= $rain_today ?? '--' ?> mm</span>
                 </div>
                 <div class="rain-row">
-                    <span style="color:var(--muted);min-width:3.5rem">Mese</span>
+                    <span style="color:var(--muted);min-width:3.5rem"><?= $L['rain_month'] ?></span>
                     <div class="rain-bar-bg"><div class="rain-bar-fill" style="width:<?= min(100, (float)($rain_month ?? 0) / 2) ?>%"></div></div>
                     <span class="rain-val"><?= $rain_month ?? '--' ?> mm</span>
                 </div>
                 <div class="rain-row">
-                    <span style="color:var(--muted);min-width:3.5rem">Anno</span>
+                    <span style="color:var(--muted);min-width:3.5rem"><?= $L['rain_year'] ?></span>
                     <div class="rain-bar-bg"><div class="rain-bar-fill" style="width:<?= min(100, (float)($rain_year ?? 0) / 12) ?>%"></div></div>
                     <span class="rain-val"><?= $rain_year ?? '--' ?> mm</span>
                 </div>
             </div>
             <div class="card-sub mt-xs">
-                Intensità: <?= $rain_rate ?? '--' ?> mm/h
+                <?= $L['rain_rate'] ?>: <?= $rain_rate ?? '--' ?> mm/h
                 <div style="margin-top:0.3rem;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;">
                     <div style="width:<?= $rain_rate_pct ?>%;height:100%;background:<?= $rain_rate_color ?>;"></div>
                 </div>
             </div>
             <?php if ($lastRainDate): ?>
-            <div class="card-sub mt-xs">Ultima pioggia: <b><?= $lastRainLabel === 'Oggi' ? 'Oggi' : $lastRainDate ?></b></div>
+            <div class="card-sub mt-xs"><?= $L['last_rain'] ?>: <b><?= $lastRainLabel ?></b></div>
             <?php endif; ?>
         </div>
 
         <div class="card">
-            <div class="card-label">Riepilogo giornata</div>
+            <div class="card-label"><?= $L['daily_summary'] ?></div>
             <div style="display:flex;flex-direction:column;gap:0.55rem;margin-top:0.3rem;">
-                <div class="flex-between" style="font-size:0.82rem"><span style="color:var(--muted)">Temp. max</span><b><?= $temp_max ?? '--' ?>°C</b></div>
-                <div class="flex-between" style="font-size:0.82rem"><span style="color:var(--muted)">Temp. min</span><b><?= $temp_min ?? '--' ?>°C</b></div>
-                <div class="flex-between" style="font-size:0.82rem"><span style="color:var(--muted)">Raffica max</span><b><?= $gust_max ?? '--' ?> km/h</b></div>
-                <div class="flex-between" style="font-size:0.82rem"><span style="color:var(--muted)">Press. max</span><b><?= $press_max ?? '--' ?> hPa</b></div>
-                <div class="flex-between" style="font-size:0.82rem"><span style="color:var(--muted)">Press. min</span><b><?= $press_min ?? '--' ?> hPa</b></div>
-                <div class="flex-between" style="font-size:0.82rem"><span style="color:var(--muted)">Pioggia</span><b><?= $rain_today ?? '--' ?> mm</b></div>
+                <div class="flex-between" style="font-size:0.82rem"><span style="color:var(--muted)"><?= $L['temp_max'] ?></span><b><?= $temp_max ?? '--' ?>°C</b></div>
+                <div class="flex-between" style="font-size:0.82rem"><span style="color:var(--muted)"><?= $L['temp_min'] ?></span><b><?= $temp_min ?? '--' ?>°C</b></div>
+                <div class="flex-between" style="font-size:0.82rem"><span style="color:var(--muted)"><?= $L['wind_gust_max'] ?></span><b><?= $gust_max ?? '--' ?> km/h</b></div>
+                <div class="flex-between" style="font-size:0.82rem"><span style="color:var(--muted)"><?= $L['press_max'] ?></span><b><?= $press_max ?? '--' ?> hPa</b></div>
+                <div class="flex-between" style="font-size:0.82rem"><span style="color:var(--muted)"><?= $L['press_min'] ?></span><b><?= $press_min ?? '--' ?> hPa</b></div>
+                <div class="flex-between" style="font-size:0.82rem"><span style="color:var(--muted)"><?= $L['precipitation'] ?></span><b><?= $rain_today ?? '--' ?> mm</b></div>
             </div>
         </div>
     </div>
 
-    <!-- MODULO: WEBCAM (Singola con supporto JPG diretto) -->
+    <!-- MODULO: WEBCAM -->
     <?php if ($modCam): ?>
     <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem;">
-        <div class="section-title" style="margin-bottom:0">Webcam live</div>
+        <div class="section-title" style="margin-bottom:0"><?= $L['webcam_title'] ?></div>
         <?php if (!empty($config['modules']['webcam']['gallery_url'])): ?>
-        <a href="<?= htmlspecialchars($config['modules']['webcam']['gallery_url']) ?>" style="color:var(--muted);font-size:0.75rem;text-decoration:none;">Gallery & Timelapse →</a>
+        <a href="<?= htmlspecialchars($config['modules']['webcam']['gallery_url']) ?>" style="color:var(--muted);font-size:0.75rem;text-decoration:none;"><?= $L['gallery_link'] ?></a>
         <?php endif; ?>
     </div>
 
     <div class="webcam-card-single">
         <div class="webcam-frame-wrap" onclick="openLightbox('<?= htmlspecialchars($camFullUrl) ?>', '<?= htmlspecialchars($config['modules']['webcam']['name']) ?>')">
             <img id="webcamImg" src="<?= htmlspecialchars($camThumbUrl) ?>" alt="<?= htmlspecialchars($config['modules']['webcam']['name']) ?>" loading="lazy" />
-            <div class="webcam-zoom-hint">🔍 clicca per ingrandire</div>
+            <div class="webcam-zoom-hint"><?= $L['webcam_zoom'] ?></div>
         </div>
         <div class="webcam-label">📷 <?= htmlspecialchars($config['modules']['webcam']['name']) ?></div>
     </div>
@@ -414,50 +418,50 @@ else               $rain_rate_color = '#f87171';
     <!-- MODULO: GRAFICI STORICI -->
     <?php if ($modCharts): ?>
     <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem;">
-        <div class="section-title" style="margin-bottom:0">Grafici storici</div>
-        <a href="storico.php" style="color:var(--muted);font-size:0.75rem;text-decoration:none;">Archivio climatico completo →</a>
+        <div class="section-title" style="margin-bottom:0"><?= $L['charts_title'] ?></div>
+        <a href="storico.php" style="color:var(--muted);font-size:0.75rem;text-decoration:none;"><?= $L['archive_link'] ?></a>
     </div>
     <div style="display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap;">
-        <button class="btn-tab active" data-tab="monthly">📅 Mese corrente</button>
-        <button class="btn-tab" data-tab="prev">📅 <?= $monthNames[$prevM] ?> <?= $prevY ?></button>
-        <button class="btn-tab" data-tab="yearly">📆 Anno <?= $currYear ?></button>
+        <button class="btn-tab active" data-tab="monthly"><?= $L['tab_monthly'] ?></button>
+        <button class="btn-tab" data-tab="prev"><?= $L['tab_prev_month'] ?> (<?= $monthNames[$prevM] ?> <?= $prevY ?>)</button>
+        <button class="btn-tab" data-tab="yearly"><?= $L['tab_yearly'] ?> <?= $currYear ?></button>
         <?php if (!empty($config['modules']['historical_charts']['show_prev_year'])): ?>
-        <button class="btn-tab" data-tab="prevYear">📆 Anno <?= $prevFullYear ?></button>
+        <button class="btn-tab" data-tab="prevYear"><?= $L['tab_yearly'] ?> <?= $prevFullYear ?></button>
         <?php endif; ?>
     </div>
 
     <div id="panelMonthly">
         <div class="charts-grid">
-            <div class="card"><div class="card-label">Temperatura mensile — <?= $monthNames[$currMonth] ?> <?= $currYear ?></div><div class="chart-wrap"><canvas id="chartTempMonth"></canvas></div></div>
-            <div class="card"><div class="card-label">Pioggia mensile — <?= $monthNames[$currMonth] ?> <?= $currYear ?></div><div class="chart-wrap"><canvas id="chartRainMonth"></canvas></div></div>
-            <div class="card"><div class="card-label">Vento medio — <?= $monthNames[$currMonth] ?> <?= $currYear ?></div><div class="chart-wrap"><canvas id="chartWindMonth"></canvas></div></div>
-            <div class="card"><div class="card-label">Raffica max — <?= $monthNames[$currMonth] ?> <?= $currYear ?></div><div class="chart-wrap"><canvas id="chartGustMonth"></canvas></div></div>
+            <div class="card"><div class="card-label"><?= $L['chart_temp_m'] ?> — <?= $monthNames[$currMonth] ?> <?= $currYear ?></div><div class="chart-wrap"><canvas id="chartTempMonth"></canvas></div></div>
+            <div class="card"><div class="card-label"><?= $L['chart_rain_m'] ?> — <?= $monthNames[$currMonth] ?> <?= $currYear ?></div><div class="chart-wrap"><canvas id="chartRainMonth"></canvas></div></div>
+            <div class="card"><div class="card-label"><?= $L['chart_wind_m'] ?> — <?= $monthNames[$currMonth] ?> <?= $currYear ?></div><div class="chart-wrap"><canvas id="chartWindMonth"></canvas></div></div>
+            <div class="card"><div class="card-label"><?= $L['chart_gust_m'] ?> — <?= $monthNames[$currMonth] ?> <?= $currYear ?></div><div class="chart-wrap"><canvas id="chartGustMonth"></canvas></div></div>
         </div>
     </div>
 
     <div id="panelPrev" style="display:none">
         <div class="charts-grid">
-            <div class="card"><div class="card-label">Temperatura — <?= $monthNames[$prevM] ?> <?= $prevY ?></div><div class="chart-wrap"><canvas id="chartTempPrev"></canvas></div></div>
-            <div class="card"><div class="card-label">Pioggia — <?= $monthNames[$prevM] ?> <?= $prevY ?></div><div class="chart-wrap"><canvas id="chartRainPrev"></canvas></div></div>
-            <div class="card"><div class="card-label">Vento medio — <?= $monthNames[$prevM] ?> <?= $prevY ?></div><div class="chart-wrap"><canvas id="chartWindPrev"></canvas></div></div>
-            <div class="card"><div class="card-label">Raffica max — <?= $monthNames[$prevM] ?> <?= $prevY ?></div><div class="chart-wrap"><canvas id="chartGustPrev"></canvas></div></div>
+            <div class="card"><div class="card-label"><?= $L['chart_temp_m'] ?> — <?= $monthNames[$prevM] ?> <?= $prevY ?></div><div class="chart-wrap"><canvas id="chartTempPrev"></canvas></div></div>
+            <div class="card"><div class="card-label"><?= $L['chart_rain_m'] ?> — <?= $monthNames[$prevM] ?> <?= $prevY ?></div><div class="chart-wrap"><canvas id="chartRainPrev"></canvas></div></div>
+            <div class="card"><div class="card-label"><?= $L['chart_wind_m'] ?> — <?= $monthNames[$prevM] ?> <?= $prevY ?></div><div class="chart-wrap"><canvas id="chartWindPrev"></canvas></div></div>
+            <div class="card"><div class="card-label"><?= $L['chart_gust_m'] ?> — <?= $monthNames[$prevM] ?> <?= $prevY ?></div><div class="chart-wrap"><canvas id="chartGustPrev"></canvas></div></div>
         </div>
     </div>
 
     <div id="panelYearly" style="display:none">
         <div class="charts-grid">
-            <div class="card"><div class="card-label">Temperatura media mensile <?= $currYear ?></div><div class="chart-wrap"><canvas id="chartTempYear"></canvas></div></div>
-            <div class="card"><div class="card-label">Pioggia mensile <?= $currYear ?></div><div class="chart-wrap"><canvas id="chartRainYear"></canvas></div></div>
-            <div class="card"><div class="card-label">Vento medio mensile <?= $currYear ?></div><div class="chart-wrap"><canvas id="chartWindYear"></canvas></div></div>
+            <div class="card"><div class="card-label"><?= $L['chart_temp_m'] ?> <?= $currYear ?></div><div class="chart-wrap"><canvas id="chartTempYear"></canvas></div></div>
+            <div class="card"><div class="card-label"><?= $L['chart_rain_m'] ?> <?= $currYear ?></div><div class="chart-wrap"><canvas id="chartRainYear"></canvas></div></div>
+            <div class="card"><div class="card-label"><?= $L['chart_wind_m'] ?> <?= $currYear ?></div><div class="chart-wrap"><canvas id="chartWindYear"></canvas></div></div>
         </div>
     </div>
 
     <?php if (!empty($config['modules']['historical_charts']['show_prev_year'])): ?>
     <div id="panelPrevYear" style="display:none">
         <div class="charts-grid">
-            <div class="card"><div class="card-label">Temperatura media mensile <?= $prevFullYear ?></div><div class="chart-wrap"><canvas id="chartTempPrevYear"></canvas></div></div>
-            <div class="card"><div class="card-label">Pioggia mensile <?= $prevFullYear ?></div><div class="chart-wrap"><canvas id="chartRainPrevYear"></canvas></div></div>
-            <div class="card"><div class="card-label">Vento medio mensile <?= $prevFullYear ?></div><div class="chart-wrap"><canvas id="chartWindPrevYear"></canvas></div></div>
+            <div class="card"><div class="card-label"><?= $L['chart_temp_m'] ?> <?= $prevFullYear ?></div><div class="chart-wrap"><canvas id="chartTempPrevYear"></canvas></div></div>
+            <div class="card"><div class="card-label"><?= $L['chart_rain_m'] ?> <?= $prevFullYear ?></div><div class="chart-wrap"><canvas id="chartRainPrevYear"></canvas></div></div>
+            <div class="card"><div class="card-label"><?= $L['chart_wind_m'] ?> <?= $prevFullYear ?></div><div class="chart-wrap"><canvas id="chartWindPrevYear"></canvas></div></div>
         </div>
     </div>
     <?php endif; ?>
@@ -465,8 +469,9 @@ else               $rain_rate_color = '#f87171';
 
     <footer>
         <span>© <?= date('Y') ?> <?= htmlspecialchars($config['station_name']) ?> · Powered by CumulusMX · <?= htmlspecialchars($config['version'] ?? 'v1.0.0') ?></span>
-        <span>Dati aggiornati: <?= htmlspecialchars($date) ?> <?= htmlspecialchars($time) ?></span>
+        <span><?= $L['last_update'] ?>: <?= htmlspecialchars($date) ?> <?= htmlspecialchars($time) ?></span>
     </footer>
+
 </main>
 
 <script>
@@ -474,16 +479,16 @@ const html = document.documentElement;
 const btnTheme = document.getElementById('themeToggle');
 const savedTheme = localStorage.getItem('theme') || 'light';
 html.setAttribute('data-theme', savedTheme);
-btnTheme.textContent = savedTheme === 'dark' ? '☀ Light' : '🌙 Dark';
+btnTheme.textContent = savedTheme === 'dark' ? '<?= $L['theme_light'] ?>' : '<?= $L['theme_dark'] ?>';
 btnTheme.addEventListener('click', () => {
     const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
     html.setAttribute('data-theme', next);
     localStorage.setItem('theme', next);
-    btnTheme.textContent = next === 'dark' ? '☀ Light' : '🌙 Dark';
+    btnTheme.textContent = next === 'dark' ? '<?= $L['theme_light'] ?>' : '<?= $L['theme_dark'] ?>';
 });
 
 <?php if ($modCharts): ?>
-const MONTH_NAMES = ['','Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+const MONTH_NAMES = <?= json_encode($L['months_short']) ?>;
 const thisMaxTemp = <?= $thisMaxTemp ?>;
 const thisMinTemp = <?= $thisMinTemp ?>;
 const thisAvgTemp = <?= $thisAvgTemp ?>;
@@ -570,34 +575,34 @@ const initializedTabs = { monthly: false, prev: false, yearly: false, prevYear: 
 function initMonthlyCharts() {
     if (initializedTabs.monthly) return;
     mkChart('chartTempMonth','line', [lineDS(thisMaxTemp,'Max °C','#f87171'), lineDS(thisMinTemp,'Min °C','#60a5fa'), lineDS(thisAvgTemp,'Media °C','#fbbf24',[4,3])], baseOpts('°C','°C'), true);
-    mkChart('chartRainMonth', 'bar',  [barDS(thisRain,'Pioggia mm','#38bdf8')], baseOpts('mm','mm',true));
-    mkChart('chartWindMonth', 'line', [lineDS(thisWind,'Vento max km/h','#818cf8')], baseOpts('km/h','km/h',true));
-    mkChart('chartGustMonth', 'line', [lineDS(thisGust,'Raffica max km/h','#f97316')], baseOpts('km/h','km/h',true));
+    mkChart('chartRainMonth', 'bar',  [barDS(thisRain,'mm','#38bdf8')], baseOpts('mm','mm',true));
+    mkChart('chartWindMonth', 'line', [lineDS(thisWind,'km/h','#818cf8')], baseOpts('km/h','km/h',true));
+    mkChart('chartGustMonth', 'line', [lineDS(thisGust,'km/h','#f97316')], baseOpts('km/h','km/h',true));
     initializedTabs.monthly = true;
 }
 
 function initPrevCharts() {
     if (initializedTabs.prev) return;
     mkChart('chartTempPrev','line', [lineDS(prevMaxTemp,'Max °C','#f87171'), lineDS(prevMinTemp,'Min °C','#60a5fa'), lineDS(prevAvgTemp,'Media °C','#fbbf24',[4,3])], baseOpts('°C','°C'), true);
-    mkChart('chartRainPrev', 'bar',  [barDS(prevRain,'Pioggia mm','#38bdf8')], baseOpts('mm','mm',true));
-    mkChart('chartWindPrev', 'line', [lineDS(prevWind,'Vento max km/h','#818cf8')], baseOpts('km/h','km/h',true));
-    mkChart('chartGustPrev', 'line', [lineDS(prevGust,'Raffica max km/h','#f97316')], baseOpts('km/h','km/h',true));
+    mkChart('chartRainPrev', 'bar',  [barDS(prevRain,'mm','#38bdf8')], baseOpts('mm','mm',true));
+    mkChart('chartWindPrev', 'line', [lineDS(prevWind,'km/h','#818cf8')], baseOpts('km/h','km/h',true));
+    mkChart('chartGustPrev', 'line', [lineDS(prevGust,'km/h','#f97316')], baseOpts('km/h','km/h',true));
     initializedTabs.prev = true;
 }
 
 function initYearlyCharts() {
     if (initializedTabs.yearly) return;
-    mkChart('chartTempYear','line', [lineMonDS(yearAvgMaxTemp,'Media max °C','#f87171'), lineMonDS(yearAvgMinTemp,'Media min °C','#60a5fa'), lineMonDS(yearAvgTemp,'Media °C','#fbbf24',[4,3])], baseOptsMonthly('°C','°C'), true);
-    mkChart('chartRainYear',  'bar',  [barMonDS(yearRain,'Pioggia mm','#38bdf8')], baseOptsMonthly('mm','mm',true));
-    mkChart('chartWindYear',  'line', [lineMonDS(yearWind,'Vento max medio km/h','#818cf8')], baseOptsMonthly('km/h','km/h',true));
+    mkChart('chartTempYear','line', [lineMonDS(yearAvgMaxTemp,'Max °C','#f87171'), lineMonDS(yearAvgMinTemp,'Min °C','#60a5fa'), lineMonDS(yearAvgTemp,'Media °C','#fbbf24',[4,3])], baseOptsMonthly('°C','°C'), true);
+    mkChart('chartRainYear',  'bar',  [barMonDS(yearRain,'mm','#38bdf8')], baseOptsMonthly('mm','mm',true));
+    mkChart('chartWindYear',  'line', [lineMonDS(yearWind,'km/h','#818cf8')], baseOptsMonthly('km/h','km/h',true));
     initializedTabs.yearly = true;
 }
 
 function initPrevYearCharts() {
     if (initializedTabs.prevYear) return;
-    mkChart('chartTempPrevYear','line', [lineMonDS(prevYearAvgMaxTemp,'Media max °C','#f87171'), lineMonDS(prevYearAvgMinTemp,'Media min °C','#60a5fa'), lineMonDS(prevYearAvgTemp,'Media °C','#fbbf24',[4,3])], baseOptsMonthly('°C','°C'), true);
-    mkChart('chartRainPrevYear',  'bar',  [barMonDS(prevYearRain,'Pioggia mm','#38bdf8')], baseOptsMonthly('mm','mm',true));
-    mkChart('chartWindPrevYear',  'line', [lineMonDS(prevYearWind,'Vento max medio km/h','#818cf8')], baseOptsMonthly('km/h','km/h',true));
+    mkChart('chartTempPrevYear','line', [lineMonDS(prevYearAvgMaxTemp,'Max °C','#f87171'), lineMonDS(prevYearAvgMinTemp,'Min °C','#60a5fa'), lineMonDS(prevYearAvgTemp,'Media °C','#fbbf24',[4,3])], baseOptsMonthly('°C','°C'), true);
+    mkChart('chartRainPrevYear',  'bar',  [barMonDS(prevYearRain,'mm','#38bdf8')], baseOptsMonthly('mm','mm',true));
+    mkChart('chartWindPrevYear',  'line', [lineMonDS(prevYearWind,'km/h','#818cf8')], baseOptsMonthly('km/h','km/h',true));
     initializedTabs.prevYear = true;
 }
 
@@ -641,10 +646,7 @@ function triggerHeavyResources() {
 setTimeout(triggerHeavyResources, 2500);
 
 <?php if ($modCam): ?>
-// Refresh periodico con cache-busting per JPG statici
 const camBaseThumb = '<?= htmlspecialchars($camThumbUrl) ?>';
-const camBaseFull  = '<?= htmlspecialchars($camFullUrl) ?>';
-
 setInterval(() => {
     const cam = document.getElementById('webcamImg');
     if (cam) {
