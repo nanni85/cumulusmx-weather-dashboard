@@ -1,50 +1,50 @@
 <?php
-// config.example.php -> Rinomina in config.php e personalizza i campi
+// config.example.php -> Rename this file to config.php and customize the values below
 
 return [
-    // Versione del template
+    // Template release version
     'version'        => 'v1.0.0',
 
-    // Lingua interfaccia: 'it' oppure 'en'
-    'lang'           => 'it',
+    // Interface language: 'en' or 'it'
+    'lang'           => 'en',
 
-    // Informazioni generali Stazione Meteo
-    'station_name'   => 'Stazione Meteo Demo',
-    'station_city'   => 'Città, Regione',
-    'station_alt'    => 250, // Quota altimetrica in metri s.l.m.
-    'site_url'       => 'https://esempio-meteo.it',
+    // Weather station general profile
+    'station_name'   => 'Demo Weather Station',
+    'station_city'   => 'City, Country',
+    'station_alt'    => 250, // Elevation in meters a.s.l.
+    'site_url'       => 'https://example-weather.com',
     
-    // Coordinate geografiche (per centrare il Radar Windy)
+    // GPS coordinates (used to center the embedded Windy Radar)
     'lat'            => 43.44,
     'lon'            => 11.85,
 
-    // Percorsi file locali generati da CumulusMX
+    // File paths to CumulusMX output data
     'realtime_path'  => __DIR__ . '/realtime.txt',
     'json_base_path' => __DIR__ . '/',
 
     // ==========================================
-    // MODULI OPZIONALI
+    // OPTIONAL MODULES
     // ==========================================
     'modules' => [
-        // Radar precipitazioni Windy
+        // Windy precipitation radar map
         'windy_radar' => [
             'enabled' => true,
             'zoom'    => 11,
         ],
 
-        // Singola Webcam (JPG locale o remoto)
+        // Single Webcam support (local image path or remote URL)
         'webcam' => [
             'enabled'     => true,
-            'name'        => 'Webcam Panoramica',
-            'url'         => 'webcam.jpg',
-            'thumb_url'   => '', // Lascia vuoto per usare direttamente 'url'
-            'gallery_url' => '', // Link opzionale (es. 'gallery/') o vuoto '' se assente
+            'name'        => 'Panoramic Webcam',
+            'url'         => 'webcam.jpg', // e.g. 'webcam.jpg', 'images/webcam.jpg', or 'https://...'
+            'thumb_url'   => '',           // Optional thumbnail URL (leave empty '' to use 'url' directly)
+            'gallery_url' => '',           // Optional gallery link (e.g. 'gallery/') or leave empty ''
         ],
 
-        // Grafici storici (richiede i file alldaily*.json di CumulusMX)
+        // Historical charts (requires CumulusMX alldaily*.json files)
         'historical_charts' => [
             'enabled'        => true,
-            'show_prev_year' => true // Mostra tab dell'anno precedente nella dashboard
+            'show_prev_year' => true // Display the previous year tab on the dashboard
         ]
     ]
 ];
