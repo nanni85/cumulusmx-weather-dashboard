@@ -20,7 +20,7 @@ Progettata per essere leggera, rapida e facile da configurare tramite un unico f
 
 ```text
 ├── config.example.php      # File di configurazione di esempio
-├── config.php              # Configurazione attiva (ignorata da Git)
+├── config.php              # Configurazione attiva 
 ├── index.php               # Dashboard principale in tempo reale
 ├── storico.php             # Archivio climatico mensile e annuale
 ├── .gitignore              # Esclude dati personali e file di cache
