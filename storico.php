@@ -6,6 +6,9 @@ if (!file_exists($configFile)) {
     die("File config.php mancante. Copia config.example.php in config.php e inserisci i parametri.");
 }
 $config = require $configFile;
+require_once __DIR__ . '/includes/lang.php';
+
+$L = loadTranslations($config['lang'] ?? 'it');
 
 $JSON_BASE = rtrim($config['json_base_path'] ?? __DIR__, '/') . '/';
 
@@ -112,8 +115,7 @@ if (!isset($ym[$currentYear]) || !in_array($currentMonth, $ym[$currentYear])) {
     $currentMonth = isset($ym[$currentYear]) ? max($ym[$currentYear]) : (int)date('n');
 }
 
-$monthNames = ['','Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
-               'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+$monthNames = $L['months'];
 
 function filterByYearMonth(array $series, int $y, int $m): array {
     $out = [];
@@ -164,12 +166,11 @@ function jsArr(array $data): string {
 }
 ?>
 <!doctype html>
-<html lang="it" data-theme="light">
+<html lang="<?= htmlspecialchars($config['lang'] ?? 'it') ?>" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Storico Climatico – <?= htmlspecialchars($config['station_name']) ?></title>
-  <meta name="description" content="Archivio e dati storici climatici di <?= htmlspecialchars($config['station_name']) ?>.">
+  <title><?= $L['climatic_archive'] ?> – <?= htmlspecialchars($config['station_name']) ?></title>
   <link rel="icon" type="image/svg+xml" href="ico/favicon.svg">
   <meta name="theme-color" content="#0ea5e9">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -220,7 +221,7 @@ function jsArr(array $data): string {
     .charts-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     @media (max-width: 800px) { .charts-2col { grid-template-columns: 1fr; } }
     .stats-row { display: flex; gap: 1.5rem; flex-wrap: wrap; padding: 0.75rem 0; border-bottom: 1px solid var(--border); font-size: 0.82rem; }
-    .stat-item { display: flex; flex-direction: column; gap: 0.1rem; }
+    .stat-item { display: flex; direction: column; gap: 0.1rem; }
     .stat-lbl { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; }
     .stat-val { font-family: var(--font-head); font-weight: 700; font-size: 1rem; color: var(--text); }
     .stat-val.hot { color: var(--bad); } .stat-val.cold { color: var(--accent); } .stat-val.rain { color: #60a5fa; } .stat-val.wind { color: var(--accent2); }
@@ -242,17 +243,17 @@ function jsArr(array $data): string {
   <header>
     <div class="header-left">
       <a href="index.php"><div class="station-name">⛅ <?= htmlspecialchars($config['station_name']) ?></div></a>
-      <div class="station-meta">📊 Storico Climatico · <?= htmlspecialchars($config['station_city']) ?></div>
+      <div class="station-meta">📊 <?= $L['climatic_archive'] ?> · <?= htmlspecialchars($config['station_city']) ?></div>
     </div>
     <div class="header-right">
-      <a class="btn-back" href="index.php">← Meteo Live</a>
+      <a class="btn-back" href="index.php"><?= $L['back_to_live'] ?></a>
       <button class="btn-theme" id="themeToggle">☀ Light</button>
     </div>
   </header>
 
   <?php if (!empty($ym)): ?>
   <div class="navigator">
-    <span class="nav-label">📅 Periodo</span>
+    <span class="nav-label">📅 <?= $L['period'] ?></span>
     <div class="nav-selects">
       <select id="selYear" onchange="updateUrl()">
         <?php foreach ($ym as $y => $months): ?>
@@ -281,84 +282,84 @@ function jsArr(array $data): string {
     $minP = !empty($sel['minBaro']) ? min(array_column($sel['minBaro'], 1)) : null;
   ?>
   <div class="chart-card">
-    <h3>Riepilogo <?= $monthNames[$currentMonth] ?> <?= $currentYear ?></h3>
+    <h3><?= $L['month_summary'] ?> <?= $monthNames[$currentMonth] ?> <?= $currentYear ?></h3>
     <div class="stats-row">
-      <?php if ($maxT !== null): ?><div class="stat-item"><span class="stat-lbl">Temp max</span><span class="stat-val hot"><?= number_format($maxT,1) ?>°C</span></div><?php endif; ?>
-      <?php if ($minT !== null): ?><div class="stat-item"><span class="stat-lbl">Temp min</span><span class="stat-val cold"><?= number_format($minT,1) ?>°C</span></div><?php endif; ?>
-      <?php if ($avgT !== null): ?><div class="stat-item"><span class="stat-lbl">Temp media</span><span class="stat-val"><?= number_format($avgT,1) ?>°C</span></div><?php endif; ?>
-      <div class="stat-item"><span class="stat-lbl">Pioggia totale</span><span class="stat-val rain"><?= number_format($rainTotal,1) ?> mm</span></div>
-      <?php if ($maxG !== null): ?><div class="stat-item"><span class="stat-lbl">Raffica max</span><span class="stat-val wind"><?= number_format($maxG,0) ?> km/h</span></div><?php endif; ?>
-      <?php if ($maxH !== null): ?><div class="stat-item"><span class="stat-lbl">Umidità max</span><span class="stat-val"><?= number_format($maxH,0) ?>%</span></div><?php endif; ?>
-      <?php if ($minH !== null): ?><div class="stat-item"><span class="stat-lbl">Umidità min</span><span class="stat-val"><?= number_format($minH,0) ?>%</span></div><?php endif; ?>
-      <?php if ($maxP !== null): ?><div class="stat-item"><span class="stat-lbl">Pressione max</span><span class="stat-val"><?= number_format($maxP,1) ?> hPa</span></div><?php endif; ?>
-      <?php if ($minP !== null): ?><div class="stat-item"><span class="stat-lbl">Pressione min</span><span class="stat-val"><?= number_format($minP,1) ?> hPa</span></div><?php endif; ?>
+      <?php if ($maxT !== null): ?><div class="stat-item"><span class="stat-lbl"><?= $L['temp_max'] ?></span><span class="stat-val hot"><?= number_format($maxT,1) ?>°C</span></div><?php endif; ?>
+      <?php if ($minT !== null): ?><div class="stat-item"><span class="stat-lbl"><?= $L['temp_min'] ?></span><span class="stat-val cold"><?= number_format($minT,1) ?>°C</span></div><?php endif; ?>
+      <?php if ($avgT !== null): ?><div class="stat-item"><span class="stat-lbl"><?= $L['wind_avg'] ?> Temp</span><span class="stat-val"><?= number_format($avgT,1) ?>°C</span></div><?php endif; ?>
+      <div class="stat-item"><span class="stat-lbl"><?= $L['precipitation'] ?></span><span class="stat-val rain"><?= number_format($rainTotal,1) ?> mm</span></div>
+      <?php if ($maxG !== null): ?><div class="stat-item"><span class="stat-lbl"><?= $L['wind_gust_max'] ?></span><span class="stat-val wind"><?= number_format($maxG,0) ?> km/h</span></div><?php endif; ?>
+      <?php if ($maxH !== null): ?><div class="stat-item"><span class="stat-lbl"><?= $L['humidity'] ?> Max</span><span class="stat-val"><?= number_format($maxH,0) ?>%</span></div><?php endif; ?>
+      <?php if ($minH !== null): ?><div class="stat-item"><span class="stat-lbl"><?= $L['humidity'] ?> Min</span><span class="stat-val"><?= number_format($minH,0) ?>%</span></div><?php endif; ?>
+      <?php if ($maxP !== null): ?><div class="stat-item"><span class="stat-lbl"><?= $L['press_max'] ?></span><span class="stat-val"><?= number_format($maxP,1) ?> hPa</span></div><?php endif; ?>
+      <?php if ($minP !== null): ?><div class="stat-item"><span class="stat-lbl"><?= $L['press_min'] ?></span><span class="stat-val"><?= number_format($minP,1) ?> hPa</span></div><?php endif; ?>
     </div>
   </div>
 
-  <div class="section-title">🌡 Temperatura</div>
+  <div class="section-title">🌡 <?= $L['temperature'] ?></div>
   <div class="chart-card">
-    <h3>Temperatura giornaliera</h3>
+    <h3><?= $L['temp_daily'] ?></h3>
     <div class="chart-subtitle">Min / Media / Max °C</div>
     <div class="chart-wrap-tall"><canvas id="chartTemp"></canvas></div>
   </div>
 
   <div class="charts-2col">
     <div class="chart-card">
-      <h3>Punto di rugiada</h3>
+      <h3><?= $L['dew_daily'] ?></h3>
       <div class="chart-subtitle">Max / Min °C</div>
       <div class="chart-wrap"><canvas id="chartDew"></canvas></div>
     </div>
     <div class="chart-card">
-      <h3>Temperatura percepita</h3>
+      <h3><?= $L['feels_daily'] ?></h3>
       <div class="chart-subtitle">Max / Min °C</div>
       <div class="chart-wrap"><canvas id="chartFeels"></canvas></div>
     </div>
   </div>
 
-  <div class="section-title">🌧 Precipitazioni</div>
+  <div class="section-title">🌧 <?= $L['precipitation'] ?></div>
   <div class="chart-card">
-    <h3>Pioggia giornaliera</h3>
-    <div class="chart-subtitle">mm · Totale mese: <strong><?= number_format($rainTotal, 1) ?> mm</strong></div>
+    <h3><?= $L['rain_daily'] ?></h3>
+    <div class="chart-subtitle">mm · Tot: <strong><?= number_format($rainTotal, 1) ?> mm</strong></div>
     <div class="chart-wrap"><canvas id="chartRain"></canvas></div>
   </div>
   <div class="chart-card">
-    <h3>Intensità massima pioggia</h3>
+    <h3><?= $L['rain_rate_max'] ?></h3>
     <div class="chart-subtitle">mm/h</div>
     <div class="chart-wrap"><canvas id="chartRainRate"></canvas></div>
   </div>
 
-  <div class="section-title">📊 Pressione atmosferica</div>
+  <div class="section-title">📊 <?= $L['pressure'] ?></div>
   <div class="chart-card">
-    <h3>Pressione giornaliera</h3>
+    <h3><?= $L['press_daily'] ?></h3>
     <div class="chart-subtitle">Min / Max hPa</div>
     <div class="chart-wrap"><canvas id="chartPress"></canvas></div>
   </div>
 
   <div class="charts-2col">
     <div class="chart-card">
-      <h3>Umidità relativa</h3>
+      <h3><?= $L['humidity'] ?></h3>
       <div class="chart-subtitle">Min / Max %</div>
       <div class="chart-wrap"><canvas id="chartHum"></canvas></div>
     </div>
     <div class="chart-card">
-      <h3>Vento</h3>
-      <div class="chart-subtitle">Raffica max / Vento max km/h</div>
+      <h3><?= $L['wind'] ?></h3>
+      <div class="chart-subtitle"><?= $L['wind_gust_max'] ?> / <?= $L['wind_speed'] ?> max km/h</div>
       <div class="chart-wrap"><canvas id="chartWind"></canvas></div>
     </div>
   </div>
 
   <?php if (!empty($rainByYear)): ?>
-  <div class="section-title">📅 Pioggia totale per anno</div>
+  <div class="section-title">📅 <?= $L['annual_rain'] ?></div>
   <div class="chart-card">
-    <h3>Precipitazioni annuali</h3>
-    <div class="chart-subtitle">Totale mm per anno solare</div>
+    <h3><?= $L['annual_rain'] ?></h3>
+    <div class="chart-subtitle">Totale mm</div>
     <div class="chart-wrap"><canvas id="chartAnnualRain"></canvas></div>
     <table class="annual-table" style="margin-top:1rem;">
-      <thead><tr><th>Anno</th><th>Totale</th><th class="bar-cell">Distribuzione</th></tr></thead>
+      <thead><tr><th><?= $L['rain_year'] ?></th><th>Totale</th><th class="bar-cell"><?= $L['distribution'] ?></th></tr></thead>
       <tbody>
         <?php
           $maxRainYear = max($rainByYear);
-          foreach ($rainByYear as $y => $tot):
+          foreach ($rainByYear as $y =>$tot):
         ?>
           <tr>
             <td class="year-cell"><?= $y ?></td>
@@ -375,16 +376,16 @@ function jsArr(array $data): string {
 
   <?php else: ?>
   <div class="chart-card">
-    <h3>Nessun dato storico trovato</h3>
+    <h3><?= $L['no_data_found'] ?></h3>
     <p style="color:var(--muted);font-size:0.85rem;margin-top:0.5rem;">
-      Verifica che i file <code>alldaily*.json</code> di CumulusMX siano presenti nella cartella configurata.
+      <?= $L['check_json_files'] ?>
     </p>
   </div>
   <?php endif; ?>
 
   <footer>
     <span>© <?= date('Y') ?> <?= htmlspecialchars($config['station_name']) ?> · <?= htmlspecialchars($config['station_city']) ?> · <?= htmlspecialchars($config['version'] ?? 'v1.0.0') ?></span>
-    <span><a href="index.php">🌡 Meteo Live</a></span>
+    <span><a href="index.php"><?= $L['back_to_live'] ?></a></span>
   </footer>
 
 </div>
@@ -395,12 +396,12 @@ function jsArr(array $data): string {
   const btn  = document.getElementById('themeToggle');
   const saved = localStorage.getItem('theme') || 'light';
   html.setAttribute('data-theme', saved);
-  btn.textContent = saved === 'dark' ? '☀ Light' : '🌙 Dark';
+  btn.textContent = saved === 'dark' ? '<?= $L['theme_light'] ?>' : '<?=$L['theme_dark'] ?>';
   btn.addEventListener('click', function(){
     const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
     html.setAttribute('data-theme', next);
     localStorage.setItem('theme', next);
-    btn.textContent = next === 'dark' ? '☀ Light' : '🌙 Dark';
+    btn.textContent = next === 'dark' ? '<?= $L['theme_light'] ?>' : '<?=$L['theme_dark'] ?>';
     updateAllChartThemes();
   });
 })();
@@ -420,8 +421,7 @@ if (selYearElem) {
     const months = ymData[y] || [];
     const selM = document.getElementById('selMonth');
     selM.innerHTML = '';
-    const mNames = ['','Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
-                    'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+    const mNames = <?= json_encode($L['months']) ?>;
     months.forEach(m => {
       const opt = document.createElement('option');
       opt.value = m; opt.textContent = mNames[m];
@@ -475,7 +475,7 @@ function baseOptions(extra = {}) {
       legend: { labels: { usePointStyle: true, color: c.legend, boxWidth: 10, padding: 12, font: { size: 11 } } },
       tooltip: {
         callbacks: {
-          title: items => new Date(items[0].parsed.x).toLocaleDateString('it-IT', { weekday:'short', day:'2-digit', month:'2-digit' })
+          title: items => new Date(items[0].parsed.x).toLocaleDateString('<?= $config['lang'] === 'en' ? 'en-US' : 'it-IT' ?>', { weekday:'short', day:'2-digit', month:'2-digit' })
         }
       }
     },
@@ -509,7 +509,7 @@ makeChart('chartTemp', {
   data: {
     datasets: [
       { label: 'Max °C', data: toXY(sel.maxTemp), borderColor: '#f87171', backgroundColor: 'rgba(248,113,113,0.1)', borderWidth: 2, pointRadius: 2, tension: 0.3, fill: false },
-      { label: 'Media °C', data: toXY(sel.avgTemp), borderColor: '#fbbf24', borderWidth: 2, pointRadius: 1, tension: 0.3, fill: false, borderDash: [4,3] },
+      { label: 'Avg °C', data: toXY(sel.avgTemp), borderColor: '#fbbf24', borderWidth: 2, pointRadius: 1, tension: 0.3, fill: false, borderDash: [4,3] },
       { label: 'Min °C', data: toXY(sel.minTemp), borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,0.1)', borderWidth: 2, pointRadius: 2, tension: 0.3, fill: false },
     ]
   },
@@ -531,8 +531,8 @@ makeChart('chartFeels', {
   type: 'line',
   data: {
     datasets: [
-      { label: 'Percepita max', data: toXY(sel.maxFeels), borderColor: '#fb923c', borderWidth: 2, pointRadius: 1, tension: 0.3, fill: false },
-      { label: 'Percepita min', data: toXY(sel.minFeels), borderColor: '#93c5fd', borderWidth: 1.5, pointRadius: 1, tension: 0.3, fill: false, borderDash: [3,3] },
+      { label: 'Feels max', data: toXY(sel.maxFeels), borderColor: '#fb923c', borderWidth: 2, pointRadius: 1, tension: 0.3, fill: false },
+      { label: 'Feels min', data: toXY(sel.minFeels), borderColor: '#93c5fd', borderWidth: 1.5, pointRadius: 1, tension: 0.3, fill: false, borderDash: [3,3] },
     ]
   },
   options: baseOptions()
@@ -541,7 +541,7 @@ makeChart('chartFeels', {
 makeChart('chartRain', {
   type: 'bar',
   data: {
-    datasets: [{ label: 'Pioggia mm', data: toXY(sel.rain), backgroundColor: 'rgba(96,165,250,0.7)', borderColor: '#60a5fa', borderWidth: 1, borderRadius: 3 }]
+    datasets: [{ label: 'Rain mm', data: toXY(sel.rain), backgroundColor: 'rgba(96,165,250,0.7)', borderColor: '#60a5fa', borderWidth: 1, borderRadius: 3 }]
   },
   options: baseOptions({ beginAtZero: true })
 });
@@ -549,7 +549,7 @@ makeChart('chartRain', {
 makeChart('chartRainRate', {
   type: 'bar',
   data: {
-    datasets: [{ label: 'Intensità mm/h', data: toXY(sel.maxRainRate), backgroundColor: 'rgba(14,165,233,0.6)', borderColor: '#0ea5e9', borderWidth: 1, borderRadius: 3 }]
+    datasets: [{ label: 'Rate mm/h', data: toXY(sel.maxRainRate), backgroundColor: 'rgba(14,165,233,0.6)', borderColor: '#0ea5e9', borderWidth: 1, borderRadius: 3 }]
   },
   options: baseOptions({ beginAtZero: true })
 });
@@ -580,8 +580,8 @@ makeChart('chartWind', {
   type: 'line',
   data: {
     datasets: [
-      { label: 'Raffica max km/h', data: toXY(sel.maxGust), borderColor: '#fbbf24', backgroundColor: 'rgba(251,191,36,0.1)', borderWidth: 2, pointRadius: 1, tension: 0.3, fill: true },
-      { label: 'Vento max km/h',   data: toXY(sel.maxWind), borderColor: '#f59e0b', borderWidth: 1.5, pointRadius: 1, tension: 0.3, fill: false, borderDash: [4,3] },
+      { label: 'Gust max km/h', data: toXY(sel.maxGust), borderColor: '#fbbf24', backgroundColor: 'rgba(251,191,36,0.1)', borderWidth: 2, pointRadius: 1, tension: 0.3, fill: true },
+      { label: 'Wind max km/h',   data: toXY(sel.maxWind), borderColor: '#f59e0b', borderWidth: 1.5, pointRadius: 1, tension: 0.3, fill: false, borderDash: [4,3] },
     ]
   },
   options: baseOptions({ beginAtZero: true })
@@ -592,7 +592,7 @@ makeChart('chartAnnualRain', {
   data: {
     labels: annualRain.map(([y]) => y),
     datasets: [{
-      label: 'mm/anno',
+      label: 'mm/year',
       data: annualRain.map(([,v]) => v),
       backgroundColor: annualRain.map((_, i) => i === annualRain.length-1 ? 'rgba(96,165,250,0.45)' : 'rgba(96,165,250,0.75)'),
       borderColor: '#60a5fa', borderWidth: 1.5, borderRadius: 6
